@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="kinect_robot" type="filter" name="filter" output="screen"/>
+  <node pkg="kinect_robot" type="segmen" name="segmen" output="screen"/>
+</launch>
