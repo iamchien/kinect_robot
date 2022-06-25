@@ -7,7 +7,8 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/ModelCoefficients.h>
+// #include <pcl/ModelCoefficients.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -23,6 +24,7 @@ void callback(const sensor_msgs::PointCloud2& ros_pc)
   pcl_conversions::toPCL(ros_pc, pcl_pc);
 
   point_cloud_t::Ptr cloud (new point_cloud_t());
+  point_cloud_t::Ptr remainPoints (new point_cloud_t());
   pcl::fromPCLPointCloud2(pcl_pc, *cloud);
   // pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
 
@@ -37,26 +39,34 @@ void callback(const sensor_msgs::PointCloud2& ros_pc)
   // Mandatory
   seg.setModelType (pcl::SACMODEL_PLANE);
   seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setDistanceThreshold (0.01);
+  seg.setDistanceThreshold (0.02);
 
   seg.setInputCloud (cloud);
   seg.segment (*inliers, *coefficients);
 
-  pcl_msgs::PointIndices ros_inliers;
-  pcl_conversions::fromPCL(*inliers, ros_inliers);
+  // std::cout << "Size of inliers.indices: " << inliers.indices.size() << std::endl;
 
-  // mark the found inliers in green
-  for (int m=0; m<ros_inliers.indices.size(); ++m)
-  {
-    cloud->points[ros_inliers.indices[m]].r = 255;
-    cloud->points[ros_inliers.indices[m]].g = 0;
-    cloud->points[ros_inliers.indices[m]].b = 0;
-  }
+  pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+  extract.setInputCloud (cloud);
+  extract.setIndices (inliers);
+  extract.setNegative (true);//false
+  extract.filter (*remainPoints);  
+
+  // pcl_msgs::PointIndices ros_inliers;
+  // pcl_conversions::fromPCL(*inliers, ros_inliers);
+
+  // // mark the found inliers in green
+  // for (int m=0; m<ros_inliers.indices.size(); ++m)
+  // {
+  //   cloud->points[ros_inliers.indices[m]].r = 255;
+  //   cloud->points[ros_inliers.indices[m]].g = 0;
+  //   cloud->points[ros_inliers.indices[m]].b = 0;
+  // }
 
   // Covert output to ROS format
   // Publish the data
   sensor_msgs::PointCloud2 ros_output;
-  pcl::toPCLPointCloud2(*cloud, pcl_pc);
+  pcl::toPCLPointCloud2(*remainPoints, pcl_pc);
   pcl_conversions::fromPCL(pcl_pc, ros_output);
 
   pub.publish(ros_output);
