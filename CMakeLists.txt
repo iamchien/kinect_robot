@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roscpp
   sensor_msgs
+  geometry_msgs
+  visualization_msgs
   message_generation
 )
 
@@ -20,19 +22,22 @@ find_package(PCL REQUIRED)
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
-add_message_files(FILES 
+add_message_files(
+  FILES 
   SegmentedClustersArray.msg
 )
 
 generate_messages(
   DEPENDENCIES
   sensor_msgs
+  geometry_msgs
+  visualization_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES kinect_robot
-  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp sensor_msgs message_runtime
+  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp sensor_msgs geometry_msgs visualization_msgs message_runtime
 #  DEPENDS system_lib
 )
 
